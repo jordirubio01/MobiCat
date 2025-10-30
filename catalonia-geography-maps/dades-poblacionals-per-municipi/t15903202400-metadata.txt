@@ -1,5 +1,0 @@
-Altitud, superfície i població. Municipis
-2024
-Font: Idescat, a partir del Cens de població anual de l'INE.
-Institut d'Estadística de Catalunya
-https://www.idescat.cat/indicadors/?id=aec&n=15903&t=202400
