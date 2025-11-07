@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "./mobicat_python_utils"
+    ]
+}
