@@ -1,5 +1,5 @@
 {
     "python.analysis.extraPaths": [
-        "./mobicat_python_utils"
+        "${workspaceFolder}/mobicat_python_utils"
     ]
 }
