@@ -3,6 +3,8 @@ import importlib
 import sys
 import subprocess
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 from typing import Literal
 
 def install_if_missing(package):
@@ -200,14 +202,33 @@ def group_by_day(df: pd.DataFrame) -> pd.DataFrame:
         .reset_index()
     )
 
+def group_by_origin_profile(df: pd.DataFrame) -> pd.DataFrame:
+    return pd.DataFrame(df
+        .groupby(by=["origen"])["viajes"]
+        .sum()
+        .reset_index()                 
+    )
+
+def group_by_origin_profile_full_datasets(full_datasets_directory: str) -> pd.DataFrame:
+    """
+    Creates a dataframe with all datasets of type #3 of Telefonica 
+    "grouped" by "origen" using the sum of "viajes".
+    """
+    datasets_names_df = get_datasets_names(full_datasets_directory)
+    concatenated_df = pd.DataFrame(columns=["origen", "viajes"])
+    for municipios in datasets_names_df["municipios"]:
+        municipios_df = pd.read_csv(municipios)
+        origin_profile_df = group_by_origin_profile(municipios_df)
+        concatenated_df = pd.concat([concatenated_df, origin_profile_df])
+    return concatenated_df.reset_index()
+
 
 def group_by_day_full_datasets(full_datasets_directory: str) -> pd.DataFrame:
     """
     Creates a dataframe with all datasets of type #3 of Telefonica 
-    "grouped" by day using the sum of "viajes".
+    "grouped" by "day" using the sum of "viajes".
     """
     datasets_names_df = get_datasets_names(full_datasets_directory)
-
     concatenated_df = pd.DataFrame(columns=['day', 'day_of_week', "month", "viajes"])
     for municipios in datasets_names_df["municipios"]:
         municipios_df = pd.read_csv(municipios)
@@ -224,6 +245,12 @@ def filter_by_day(
     return day_df[(day_df["day"] >= pd.Timestamp(start)) 
                   & (day_df["day"] <= pd.Timestamp(end))]     
 
+def filter_day_by_year(
+        day_df: pd.DataFrame, 
+        year: str = "2023"
+    ) -> pd.DataFrame:
+    return day_df[day_df["day"].dt.year == year]     
+
 def filter_day_by_year_month(
         day_df: pd.DataFrame, 
         year: int = 2023, 
@@ -231,3 +258,63 @@ def filter_day_by_year_month(
     ) -> pd.DataFrame:
     return day_df[(day_df["day"].dt.year == year) 
                   & (day_df["day"].dt.month == month)]
+
+def plot_histogram_and_boxplot(
+        array, 
+        figsize = (9, 6), 
+        height_ratios = [5, 2], 
+        title = "", 
+        xlabel = "", 
+        ylabel = "", 
+        ticks=None, 
+        labels=None,
+        histogram_bins = "auto", 
+        histogram_color = None, 
+        boxplot_width = 0.7, 
+        boxplot_color=None
+    ) -> None:
+
+    fig, (ax1, ax2) = plt.subplots(
+        nrows=2, 
+        ncols=1, 
+        figsize=figsize, 
+        height_ratios=height_ratios
+    )
+    
+    ax1.hist(x=array, bins=histogram_bins, color=histogram_color)
+    ax1.set_ylabel(ylabel)
+
+    
+    sns.boxplot(x=array, ax=ax2, width=boxplot_width, color=boxplot_color)
+    ax2.set_xlabel(xlabel) 
+    ax2.set_ylabel("") 
+
+    fig.suptitle(title)
+    if ticks is not None and labels is not None:
+        ax1.set_xticks(ticks)
+        ax1.set_xticklabels(labels)
+        ax2.set_xticks(ticks) 
+        ax2.set_xticklabels(labels)
+    plt.show()
+
+def plot_histogram_with_density(
+        array,
+        figsize = (9,5),
+        histogram_color = None,
+        histogram_bins = "auto",
+        density_color = None,
+        title = "",
+        xlabel = "",
+        ylabel = "",
+        ticks = None,
+        labels = None
+    ) -> None:
+    plt.figure(figsize=figsize)
+    plt.hist(x=array, density=True, bins=histogram_bins, color=histogram_color)
+    sns.kdeplot(x=array, color=density_color)
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    if ticks is not None and labels is not None:
+        plt.xticks(ticks, labels)
+    plt.show()
